@@ -49,7 +49,17 @@ public class TCPTransport: Transport {
         //normal connection, will use the "connect" method below
     }
     
+/*
+<<<<<<< HEAD
     public func connect(url: URL, timeout: Double = 10, certificatePinning: CertificatePinning? = nil) {
+        if connection != nil {
+            return
+        }
+=======
+    public func connect(url: URL, timeout: Double = 10, certificatePinning: CertificatePinning? = nil, clientCredential: URLCredential? = nil) {
+>>>>>>> mattermost/client-auth-support
+*/
+    public func connect(url: URL, timeout: Double = 10, certificatePinning: CertificatePinning? = nil, clientCredential: URLCredential? = nil) {
         if connection != nil {
             return
         }
@@ -74,6 +84,12 @@ public class TCPTransport: Transport {
                     }
                 })
             }, queue)
+            
+            if let clientCredential = clientCredential {
+                sec_protocol_options_set_challenge_block(tlsOpts.securityProtocolOptions, { (_, completionHandler) in
+                    completionHandler(sec_identity_create(clientCredential.identity!)!)
+                }, queue)
+            }
         }
         let parameters = NWParameters(tls: tlsOptions, tcp: options)
         let conn = NWConnection(host: NWEndpoint.Host.name(parts.host, nil), port: NWEndpoint.Port(rawValue: UInt16(parts.port))!, using: parameters)
