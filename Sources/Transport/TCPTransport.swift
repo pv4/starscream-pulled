@@ -131,10 +131,10 @@ public class TCPTransport: Transport {
                     if(errorCode == .ETIMEDOUT){
                         self?.delegate?.connectionChanged(state: .timedout)
                     }else{
-                        self?.delegate?.connectionChanged(state: .waiting)
+                        self?.delegate?.connectionChanged(state: .waiting(error))
                     }
                 default:
-                    self?.delegate?.connectionChanged(state: .waiting)
+                    self?.delegate?.connectionChanged(state: .waiting(error))
                 }
 /*
 >>>>>>> sebohdev/feature/pass_on_timeout
