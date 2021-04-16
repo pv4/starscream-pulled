@@ -105,7 +105,24 @@ public class TCPTransport: Transport {
             case .ready:
                 self?.delegate?.connectionChanged(state: .connected)
             case .waiting(let error):
+/*
+<<<<<<< HEAD
                 self?.delegate?.connectionChanged(state: .waiting(error))
+=======
+*/
+                switch error {
+                case .posix(let errorCode):
+                    if(errorCode == .ETIMEDOUT){
+                        self?.delegate?.connectionChanged(state: .timedout)
+                    }else{
+                        self?.delegate?.connectionChanged(state: .waiting)
+                    }
+                default:
+                    self?.delegate?.connectionChanged(state: .waiting)
+                }
+/*
+>>>>>>> sebohdev/feature/pass_on_timeout
+*/
             case .cancelled:
                 self?.delegate?.connectionChanged(state: .cancelled)
             case .failed(let error):

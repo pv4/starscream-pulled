@@ -125,6 +125,8 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
                 handleError(error);
             }
             break
+        case .timedout:
+            broadcast(event: .timedout)
         case .failed(let error):
             handleError(error)
         case .viability(let isViable):
