@@ -120,6 +120,9 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
             let wsReq = HTTPWSHeader.createUpgrade(request: request, supportsCompression: framer.supportsCompression(), secKeyValue: secKeyValue)
             let data = httpHandler.convert(request: wsReq)
             transport.write(data: data, completion: {_ in })
+/*
+<<<<<<< HEAD
+*/
         case .waiting(let error):
             if let error = error {
                 handleError(error);
@@ -128,6 +131,12 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
         case .timedout:
             broadcast(event: .timedout)
         case .failed(let error):
+/*
+=======
+        case .waiting(let error),
+             .failed(let error):
+>>>>>>> Ranqb/errSSLClosedNoNotify
+*/
             handleError(error)
         case .viability(let isViable):
             broadcast(event: .viabilityChanged(isViable))
