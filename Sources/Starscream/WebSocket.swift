@@ -117,20 +117,19 @@ open class WebSocket: WebSocketClient, EngineDelegate {
     private var canSend = false
     private let mutex = DispatchSemaphore(value: 1)
     
-    public init(request: URLRequest, engine: Engine) {
+    public init(doLog: @escaping ((String)->Void), request: URLRequest, engine: Engine) {
         self.request = request
         self.engine = engine
         self.doLog = doLog
     }
     
     public convenience init(doLog: @escaping ((String)->Void), request: URLRequest, certPinner: CertificatePinning? = FoundationSecurity(), compressionHandler: CompressionHandler? = nil, useCustomEngine: Bool = true) {
-        self.doLog = doLog
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *), !useCustomEngine {
-            self.init(request: request, engine: NativeEngine())
+            self.init(doLog:doLog, request: request, engine: NativeEngine())
         } else if #available(macOS 10.14, iOS 12.0, watchOS 5.0, tvOS 12.0, *) {
-            self.init(request: request, engine: WSEngine(doLog:doLog, transport: TCPTransport(), certPinner: certPinner, compressionHandler: compressionHandler))
+            self.init(doLog:doLog, request: request, engine: WSEngine(doLog:doLog, transport: TCPTransport(), certPinner: certPinner, compressionHandler: compressionHandler))
         } else {
-            self.init(request: request, engine: WSEngine(doLog:doLog, transport: FoundationTransport(), certPinner: certPinner, compressionHandler: compressionHandler))
+            self.init(doLog:doLog, request: request, engine: WSEngine(doLog:doLog, transport: FoundationTransport(), certPinner: certPinner, compressionHandler: compressionHandler))
         }
     }
     
