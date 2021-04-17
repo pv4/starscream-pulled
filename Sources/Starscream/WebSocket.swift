@@ -120,6 +120,7 @@ open class WebSocket: WebSocketClient, EngineDelegate {
     public init(request: URLRequest, engine: Engine) {
         self.request = request
         self.engine = engine
+        self.doLog = doLog
     }
     
     public convenience init(doLog: @escaping ((String)->Void), request: URLRequest, certPinner: CertificatePinning? = FoundationSecurity(), compressionHandler: CompressionHandler? = nil, useCustomEngine: Bool = true) {
