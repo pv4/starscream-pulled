@@ -48,21 +48,21 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
     }
     
     public func register(delegate: EngineDelegate) {
-        self?.doLog("WSEngine.register entry")
+        doLog("WSEngine.register entry")
         self.delegate = delegate
-        self?.doLog("WSEngine.register exit")
+        doLog("WSEngine.register exit")
     }
     
     public func start(request: URLRequest) {
-        self?.doLog("WSEngine.start entry")
+        doLog("WSEngine.start entry")
         mutex.wait()
         let isConnected = canSend
         mutex.signal()
         if isConnected {
-            self?.doLog("WSEngine.start exit connected")
+            doLog("WSEngine.start exit connected")
             return
         }
-        self?.doLog("WSEngine.start continue notConnected")
+        doLog("WSEngine.start continue notConnected")
         
         self.request = request
         transport.register(delegate: self)
@@ -70,21 +70,21 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
         httpHandler.register(delegate: self)
         frameHandler.delegate = self
         guard let url = request.url else {
-            self?.doLog("WSEngine.start exit notUrl")
+            doLog("WSEngine.start exit notUrl")
             return
         }
-        self?.doLog("WSEngine.start connecting")
+        doLog("WSEngine.start connecting")
         transport.connect(url: url, timeout: request.timeoutInterval, certificatePinning: certPinner)
-        self?.doLog("WSEngine.start exit")
+        doLog("WSEngine.start exit")
     }
     
     public func stop(closeCode: UInt16 = CloseCode.normal.rawValue) {
-        self?.doLog("WSEngine.stop entry")
+        doLog("WSEngine.stop entry")
         let capacity = MemoryLayout<UInt16>.size
         var pointer = [UInt8](repeating: 0, count: capacity)
         writeUint16(&pointer, offset: 0, value: closeCode)
         let payload = Data(bytes: pointer, count: MemoryLayout<UInt16>.size)
-        self?.doLog("WSEngine.stop beforeWrite")
+        doLog("WSEngine.stop beforeWrite")
         write(data: payload, opcode: .connectionClose, completion: { [weak self] in
             self?.doLog("WSEngine.stop writeCompletion entry")
             self?.reset()
@@ -92,13 +92,13 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
             self?.forceStop()
             self?.doLog("WSEngine.stop writeCompletion exit")
         })
-        self?.doLog("WSEngine.stop exit")
+        doLog("WSEngine.stop exit")
     }
     
     public func forceStop() {
-        self?.doLog("WSEngine.forceStop entry")
+        doLog("WSEngine.forceStop entry")
         transport.disconnect()
-        self?.doLog("WSEngine.forceStop exit")
+        doLog("WSEngine.forceStop exit")
     }
     
     public func write(string: String, completion: (() -> ())?) {
@@ -107,7 +107,7 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
     }
     
     public func write(data: Data, opcode: FrameOpCode, completion: (() -> ())?) {
-        self?.doLog("WSEngine.write entry")
+        doLog("WSEngine.write entry")
         writeQueue.async { [weak self] in
             self?.doLog("WSEngine.write cb entry")
             guard let s = self else {
@@ -141,39 +141,39 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
             })
             self?.doLog("WSEngine.write cb exit")
         }
-        self?.doLog("WSEngine.write exit")
+        doLog("WSEngine.write exit")
     }
     
     // MARK: - TransportEventClient
     
     public func connectionChanged(state: ConnectionState) {
-        self?.doLog("WSEngine.connectionChanged entry")
+        doLog("WSEngine.connectionChanged entry")
         switch state {
         case .connected:
-            self?.doLog("WSEngine.connectionChanged.connected entry")
+            doLog("WSEngine.connectionChanged.connected entry")
             secKeyValue = HTTPWSHeader.generateWebSocketKey()
             let wsReq = HTTPWSHeader.createUpgrade(request: request, supportsCompression: framer.supportsCompression(), secKeyValue: secKeyValue)
             let data = httpHandler.convert(request: wsReq)
-            self?.doLog("WSEngine.connectionChanged.connected written")
+            doLog("WSEngine.connectionChanged.connected written")
             transport.write(data: data, completion: {_ in })
-            self?.doLog("WSEngine.connectionChanged.connected exit")
+            doLog("WSEngine.connectionChanged.connected exit")
         case .waiting:
-            self?.doLog("WSEngine.connectionChanged.waiting")
+            doLog("WSEngine.connectionChanged.waiting")
             break
         case .failed(let error):
-            self?.doLog("WSEngine.connectionChanged.failed entry")
+            doLog("WSEngine.connectionChanged.failed entry")
             handleError(error)
-            self?.doLog("WSEngine.connectionChanged.failed exit")
+            doLog("WSEngine.connectionChanged.failed exit")
         case .viability(let isViable):
-            self?.doLog("WSEngine.connectionChanged.viability entry")
+            doLog("WSEngine.connectionChanged.viability entry")
             broadcast(event: .viabilityChanged(isViable))
-            self?.doLog("WSEngine.connectionChanged.viability exit")
+            doLog("WSEngine.connectionChanged.viability exit")
         case .shouldReconnect(let status):
-            self?.doLog("WSEngine.connectionChanged.shouldReconnect entry")
+            doLog("WSEngine.connectionChanged.shouldReconnect entry")
             broadcast(event: .reconnectSuggested(status))
-            self?.doLog("WSEngine.connectionChanged.shouldReconnect exit")
+            doLog("WSEngine.connectionChanged.shouldReconnect exit")
         case .receive(let data):
-            self?.doLog("WSEngine.connectionChanged.receive entry")
+            doLog("WSEngine.connectionChanged.receive entry")
             if didUpgrade {
                 framer.add(data: data)
             } else {
@@ -183,33 +183,33 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
                     framer.add(data: extraData)
                 }
             }
-            self?.doLog("WSEngine.connectionChanged.receive exit")
+            doLog("WSEngine.connectionChanged.receive exit")
         case .cancelled:
-            self?.doLog("WSEngine.connectionChanged.cancelled entry")
+            doLog("WSEngine.connectionChanged.cancelled entry")
             broadcast(event: .cancelled)
-            self?.doLog("WSEngine.connectionChanged.cancelled exit")
+            doLog("WSEngine.connectionChanged.cancelled exit")
         }
-        self?.doLog("WSEngine.connectionChanged exit")
+        doLog("WSEngine.connectionChanged exit")
     }
     
     // MARK: - HTTPHandlerDelegate
     
     public func didReceiveHTTP(event: HTTPEvent) {
-        self?.doLog("WSEngine.didReceiveHttp entry")
+        doLog("WSEngine.didReceiveHttp entry")
         switch event {
         case .success(let headers):
-            self?.doLog("WSEngine.didReceiveHttp.success entry")
+            doLog("WSEngine.didReceiveHttp.success entry")
             if let error = headerChecker.validate(headers: headers, key: secKeyValue) {
-                self?.doLog("WSEngine.didReceiveHttp.success beforeHandleError")
+                doLog("WSEngine.didReceiveHttp.success beforeHandleError")
                 handleError(error)
-                self?.doLog("WSEngine.didReceiveHttp exit handleError")
+                doLog("WSEngine.didReceiveHttp exit handleError")
                 return
             }
             mutex.wait()
             didUpgrade = true
             canSend = true
             mutex.signal()
-            self?.doLog("WSEngine.didReceiveHttp.success compressionHandlerLoad")
+            doLog("WSEngine.didReceiveHttp.success compressionHandlerLoad")
             compressionHandler?.load(headers: headers)
             if let url = request.url {
                 HTTPCookie.cookies(withResponseHeaderFields: headers, for: url).forEach {
@@ -217,32 +217,32 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
                 }
             }
 
-            self?.doLog("WSEngine.didReceiveHttp.success broadcaseConnected")
+            doLog("WSEngine.didReceiveHttp.success broadcaseConnected")
             broadcast(event: .connected(headers))
-            self?.doLog("WSEngine.didReceiveHttp.success exit")
+            doLog("WSEngine.didReceiveHttp.success exit")
         case .failure(let error):
-            self?.doLog("WSEngine.didReceiveHttp.failure entry")
+            doLog("WSEngine.didReceiveHttp.failure entry")
             handleError(error)
-            self?.doLog("WSEngine.didReceiveHttp.failure exit")
+            doLog("WSEngine.didReceiveHttp.failure exit")
         }
-        self?.doLog("WSEngine.didReceiveHttp exit")
+        doLog("WSEngine.didReceiveHttp exit")
     }
     
     // MARK: - FramerEventClient
     
     public func frameProcessed(event: FrameEvent) {
-        self?.doLog("WSEngine.frameProcessed entry")
+        doLog("WSEngine.frameProcessed entry")
         switch event {
         case .frame(let frame):
-            self?.doLog("WSEngine.frameProcessed frame entry")
+            doLog("WSEngine.frameProcessed frame entry")
             frameHandler.add(frame: frame)
-            self?.doLog("WSEngine.frameProcessed frame exit")
+            doLog("WSEngine.frameProcessed frame exit")
         case .error(let error):
-            self?.doLog("WSEngine.frameProcessed error entry")
+            doLog("WSEngine.frameProcessed error entry")
             handleError(error)
-            self?.doLog("WSEngine.frameProcessed error exit")
+            doLog("WSEngine.frameProcessed error exit")
         }
-        self?.doLog("WSEngine.frameProcessed exit")
+        doLog("WSEngine.frameProcessed exit")
     }
     
     // MARK: - FrameCollectorDelegate
@@ -252,62 +252,62 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
     }
     
     public func didForm(event: FrameCollector.Event) {
-        self?.doLog("WSEngine.didForm entry")
+        doLog("WSEngine.didForm entry")
         switch event {
         case .text(let string):
-            self?.doLog("WSEngine.didForm.text entry")
+            doLog("WSEngine.didForm.text entry")
             broadcast(event: .text(string))
-            self?.doLog("WSEngine.didForm.text exit")
+            doLog("WSEngine.didForm.text exit")
         case .binary(let data):
-            self?.doLog("WSEngine.didForm.binary entry")
+            doLog("WSEngine.didForm.binary entry")
             broadcast(event: .binary(data))
-            self?.doLog("WSEngine.didForm.binary exit")
+            doLog("WSEngine.didForm.binary exit")
         case .pong(let data):
-            self?.doLog("WSEngine.didForm.pong entry")
+            doLog("WSEngine.didForm.pong entry")
             broadcast(event: .pong(data))
-            self?.doLog("WSEngine.didForm.pong exit")
+            doLog("WSEngine.didForm.pong exit")
         case .ping(let data):
-            self?.doLog("WSEngine.didForm.ping entry")
+            doLog("WSEngine.didForm.ping entry")
             broadcast(event: .ping(data))
             if respondToPingWithPong {
-                self?.doLog("WSEngine.didForm.ping writing")
+                doLog("WSEngine.didForm.ping writing")
                 write(data: data ?? Data(), opcode: .pong, completion: nil)
-                self?.doLog("WSEngine.didForm.ping written")
+                doLog("WSEngine.didForm.ping written")
             }
-            self?.doLog("WSEngine.didForm.ping exit")
+            doLog("WSEngine.didForm.ping exit")
         case .closed(let reason, let code):
-            self?.doLog("WSEngine.didForm.closed entry")
+            doLog("WSEngine.didForm.closed entry")
             broadcast(event: .disconnected(reason, code))
-            self?.doLog("WSEngine.didForm.closed stopping")
+            doLog("WSEngine.didForm.closed stopping")
             stop(closeCode: code)
-            self?.doLog("WSEngine.didForm.closed exit")
+            doLog("WSEngine.didForm.closed exit")
         case .error(let error):
-            self?.doLog("WSEngine.didForm.error entry")
+            doLog("WSEngine.didForm.error entry")
             handleError(error)
-            self?.doLog("WSEngine.didForm.error exit")
+            doLog("WSEngine.didForm.error exit")
         }
-        self?.doLog("WSEngine.didForm exit")
+        doLog("WSEngine.didForm exit")
     }
     
     private func broadcast(event: WebSocketEvent) {
-        self?.doLog("WSEngine.broadcast entry")
+        doLog("WSEngine.broadcast entry")
         delegate?.didReceive(event: event)
-        self?.doLog("WSEngine.broadcast exit")
+        doLog("WSEngine.broadcast exit")
     }
     
     //This call can be coming from a lot of different queues/threads.
     //be aware of that when modifying shared variables
     private func handleError(_ error: Error?) {
-        self?.doLog("WSEngine.handleError entry")
+        doLog("WSEngine.handleError entry")
         if let wsError = error as? WSError {
             stop(closeCode: wsError.code)
         } else {
             stop()
         }
         
-        self?.doLog("WSEngine.handleError didReceiving")
+        doLog("WSEngine.handleError didReceiving")
         delegate?.didReceive(event: .error(error))
-        self?.doLog("WSEngine.handleError exit")
+        doLog("WSEngine.handleError exit")
     }
     
     private func reset() {
@@ -316,6 +316,4 @@ FrameCollectorDelegate, HTTPHandlerDelegate {
         didUpgrade = false
         mutex.signal()
     }
-    
-    
 }

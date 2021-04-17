@@ -134,22 +134,22 @@ open class WebSocket: WebSocketClient, EngineDelegate {
     }
     
     public func connect() {
-        self?.doLog("WebSocket.connect entry")
+        doLog("WebSocket.connect entry")
         engine.register(delegate: self)
         engine.start(request: request)
-        self?.doLog("WebSocket.connect exit")
+        doLog("WebSocket.connect exit")
     }
     
     public func disconnect(closeCode: UInt16 = CloseCode.normal.rawValue) {
-        self?.doLog("WebSocket.disconnect entry")
+        doLog("WebSocket.disconnect entry")
         engine.stop(closeCode: closeCode)
-        self?.doLog("WebSocket.disconnect exit")
+        doLog("WebSocket.disconnect exit")
     }
     
     public func forceDisconnect() {
-        self?.doLog("WebSocket.forceDisconnect entry")
+        doLog("WebSocket.forceDisconnect entry")
         engine.forceStop()
-        self?.doLog("WebSocket.forceDisconnect exit")
+        doLog("WebSocket.forceDisconnect exit")
     }
     
     public func write(data: Data, completion: (() -> ())?) {
@@ -178,7 +178,7 @@ open class WebSocket: WebSocketClient, EngineDelegate {
     
     // MARK: - EngineDelegate
     public func didReceive(event: WebSocketEvent) {
-        self?.doLog("WebSocket.didReceive entry")
+        doLog("WebSocket.didReceive entry")
         callbackQueue.async { [weak self] in
             self?.doLog("WebSocket.didReceive entry")
             guard let s = self else {
@@ -191,6 +191,6 @@ open class WebSocket: WebSocketClient, EngineDelegate {
             s.onEvent?(event)
             self?.doLog("WebSocket.didReceive exit")
         }
-        self?.doLog("WebSocket.didReceive exit")
+        doLog("WebSocket.didReceive exit")
     }
 }
