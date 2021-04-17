@@ -122,7 +122,7 @@ open class WebSocket: WebSocketClient, EngineDelegate {
         self.engine = engine
     }
     
-    public convenience init(doLog: ((String)->Void), request: URLRequest, certPinner: CertificatePinning? = FoundationSecurity(), compressionHandler: CompressionHandler? = nil, useCustomEngine: Bool = true) {
+    public convenience init(doLog: @escaping ((String)->Void), request: URLRequest, certPinner: CertificatePinning? = FoundationSecurity(), compressionHandler: CompressionHandler? = nil, useCustomEngine: Bool = true) {
         self.doLog = doLog
         if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *), !useCustomEngine {
             self.init(request: request, engine: NativeEngine())
@@ -134,22 +134,22 @@ open class WebSocket: WebSocketClient, EngineDelegate {
     }
     
     public func connect() {
-        doLog("WebSocket.connect entry")
+        self?.doLog("WebSocket.connect entry")
         engine.register(delegate: self)
         engine.start(request: request)
-        doLog("WebSocket.connect exit")
+        self?.doLog("WebSocket.connect exit")
     }
     
     public func disconnect(closeCode: UInt16 = CloseCode.normal.rawValue) {
-        doLog("WebSocket.disconnect entry")
+        self?.doLog("WebSocket.disconnect entry")
         engine.stop(closeCode: closeCode)
-        doLog("WebSocket.disconnect exit")
+        self?.doLog("WebSocket.disconnect exit")
     }
     
     public func forceDisconnect() {
-        doLog("WebSocket.forceDisconnect entry")
+        self?.doLog("WebSocket.forceDisconnect entry")
         engine.forceStop()
-        doLog("WebSocket.forceDisconnect exit")
+        self?.doLog("WebSocket.forceDisconnect exit")
     }
     
     public func write(data: Data, completion: (() -> ())?) {
@@ -178,19 +178,19 @@ open class WebSocket: WebSocketClient, EngineDelegate {
     
     // MARK: - EngineDelegate
     public func didReceive(event: WebSocketEvent) {
-        doLog("WebSocket.didReceive entry")
+        self?.doLog("WebSocket.didReceive entry")
         callbackQueue.async { [weak self] in
-            doLog("WebSocket.didReceive entry")
+            self?.doLog("WebSocket.didReceive entry")
             guard let s = self else {
-                doLog("WebSocket.didReceive exit notSelf")
+                self?.doLog("WebSocket.didReceive exit notSelf")
             	return
             }
-            doLog("WebSocket.didReceive self")
+            self?.doLog("WebSocket.didReceive self")
             s.delegate?.didReceive(event: event, client: s)
-            doLog("WebSocket.didReceive entry afterDelegate")
+            self?.doLog("WebSocket.didReceive entry afterDelegate")
             s.onEvent?(event)
-            doLog("WebSocket.didReceive exit")
+            self?.doLog("WebSocket.didReceive exit")
         }
-        doLog("WebSocket.didReceive exit")
+        self?.doLog("WebSocket.didReceive exit")
     }
 }
